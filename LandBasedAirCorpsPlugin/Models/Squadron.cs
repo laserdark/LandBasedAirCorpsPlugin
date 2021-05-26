@@ -42,34 +42,19 @@ namespace LandBasedAirCorpsPlugin.Models
         }
         #endregion
 
-        public double AirSuperiorityAtSortie
+        public double GetAirSuperiority(AirRegimentBehavior behavior)
         {
-            get
-            {
-                if (this.State != SquadronState.Deployed) return 0;
+            if (this.State != SquadronState.Deployed) return 0;
 
-                var info = this.Plane.Info;
-                var intercept = this.IsInterceptor ? info.Evade : 0;
-                var improvementBonus = this.GetImprovementBonus(this.Plane);
+            var info = this.Plane.Info;
+            var intercept = this.IsInterceptor ? info.Evade : 0;
+            var antiBomber = this.IsInterceptor ? info.Hit : 0;
+            var improvementBonus = this.GetImprovementBonus(this.Plane);
+            
 
-                return Math.Floor((info.AA + (1.5 * intercept) + improvementBonus) * Math.Sqrt(this.WorkingCount) + this.Plane.GetBonus());
-            }
-        }
-
-        public double AirSuperiorityAtDefense
-        {
-            get
-            {
-                if (this.State != SquadronState.Deployed) return 0;
-
-                var info = this.Plane.Info;
-                var intercept = this.IsInterceptor ? info.Evade : 0;
-                var antiBomber = this.IsInterceptor ? info.Hit : 0;
-                var improvementBonus = this.GetImprovementBonus(this.Plane);
-
-                return Math.Floor((info.AA + intercept + (2 * antiBomber) + improvementBonus) * Math.Sqrt(this.WorkingCount) + this.Plane.GetBonus());
-            }
-        }
+            var correctAA = (behavior == AirRegimentBehavior.Defense) ? (info.AA + intercept + (2 * antiBomber)) : (info.AA + (1.5 * intercept));
+            return Math.Floor((correctAA + improvementBonus) * Math.Sqrt(this.WorkingCount) + this.Plane.GetBonus());
+        }        
 
         public bool IsInterceptor => this.Plane?.Info.Type == SlotItemType.局地戦闘機;
 
